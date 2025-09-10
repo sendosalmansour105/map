@@ -1,129 +1,198 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
   <style>
-    #chartdiv {
+    #chartdiv, #chartdiv1, #chartdiv2, #chartdiv3, #chartdiv4 {
       width: 100%;
-      height: 600px;
+      height: 500px;
+      margin-bottom: 50px;
     }
   </style>
 </head>
-
 <body>
   <div id="chartdiv"></div>
+  <hr/>
+  <div id="chartdiv1"></div>
+  <hr/>
+  <div id="chartdiv2"></div>
+  <hr/>
 
+  <div id="chartdiv3"></div>
+  <hr/>
+
+  <div id="chartdiv4"></div>
+
+  <!-- مكتبات amCharts -->
   <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/geodata/usaLow.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 
   <script>
-  am5.ready(function() {
+    // ======== الخريطة الأولى (Globe) ========
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv");
+      root.setThemes([ am5themes_Animated.new(root) ]);
+      var chart = root.container.children.push(am5map.MapChart.new(root, {
+        panX: "rotateX",
+        panY: "rotateY",
+        projection: am5map.geoOrthographic(),
+        paddingBottom: 20,
+        paddingTop: 20,
+        paddingLeft: 20,
+        paddingRight: 20
+      }));
+      var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_worldLow
+      }));
+      polygonSeries.mapPolygons.template.setAll({
+        tooltipText: "{name}",
+        toggleKey: "active",
+        interactive: true
+      });
+      polygonSeries.mapPolygons.template.states.create("hover", {
+        fill: root.interfaceColors.get("primaryButtonHover")
+      });
+      var backgroundSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {}));
+      backgroundSeries.mapPolygons.template.setAll({
+        fill: root.interfaceColors.get("alternativeBackground"),
+        fillOpacity: 0.1,
+        strokeOpacity: 0
+      });
+      backgroundSeries.data.push({
+        geometry: am5map.getGeoRectangle(90, 180, -90, -180)
+      });
+      chart.appear(1000, 100);
+    });
 
-// Create root element
-// https://www.amcharts.com/docs/v5/getting-started/#Root_element
-var root = am5.Root.new("chartdiv");
+    // ======== الخريطة الثانية (World + USA) ========
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv1");
+      root.setThemes([ am5themes_Animated.new(root) ]);
+      var chart = root.container.children.push(am5map.MapChart.new(root, {
+        panX: "translateX",
+        panY: "translateY",
+        projection: am5map.geoMercator()
+      }));
+      var polygonSeries1 = chart.series.push(am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_worldLow,
+        exclude: ["AQ"]
+      }));
+      polygonSeries1.mapPolygons.template.setAll({
+        tooltipText: "{name}",
+        toggleKey: "active",
+        interactive: true
+      });
+      var polygonSeriesUS1 = chart.series.push(am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_usaLow
+      }));
+      polygonSeriesUS1.mapPolygons.template.setAll({
+        tooltipText: "{name}",
+        toggleKey: "active",
+        interactive: true
+      });
+      var colors1 = am5.ColorSet.new(root, {});
+      polygonSeriesUS1.mapPolygons.template.set("fill", colors1.getIndex(3));
+      var zoomControl1 = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
+      zoomControl1.homeButton.set("visible", true);
+      chart.appear(1000, 100);
+    });
 
+    // ======== الخريطة الثالثة (Pacific-centered NaturalEarth1) ========
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv2");
+      root.setThemes([ am5themes_Animated.new(root) ]);
+      var chart = root.container.children.push(am5map.MapChart.new(root, {
+        panX: "rotateX",
+        panY: "none",
+        projection: am5map.geoNaturalEarth1(),
+        rotationX: -154.8
+      }));
+      var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_worldLow}));
+      polygonSeries.mapPolygons.template.setAll({
+        tooltipText: "{name}",
+        fillOpacity: 0.8
+      });
+      var graticuleSeries = chart.series.push(am5map.GraticuleSeries.new(root, {}));
+      graticuleSeries.mapLines.template.setAll({
+        stroke: root.interfaceColors.get("alternativeBackground"),
+        strokeOpacity: 0.1
+      });
+      var zoomControl = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
+      zoomControl.homeButton.set("visible", true);
+      chart.appear(1000, 100);
+    });
 
-// Set themes
-// https://www.amcharts.com/docs/v5/concepts/themes/
-root.setThemes([
-  am5themes_Animated.new(root)
-]);
+    // ======== الخريطة الرابعة (Globe toggle + markers) ========
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv3");
+      root.setThemes([ am5themes_Animated.new(root) ]);
+      var chart = root.container.children.push(am5map.MapChart.new(root, {
+        panX: "rotateX",
+        panY: "translateY",
+        projection: am5map.geoMercator()
+      }));
+      var polygonSeries = chart.series.push(
+        am5map.MapPolygonSeries.new(root, { geoJSON: am5geodata_worldLow })
+      );
+      var pointSeries = chart.series.push(am5map.MapPointSeries.new(root, {}));
+      var colorset = am5.ColorSet.new(root, {});
+      pointSeries.bullets.push(function() {
+        var container = am5.Container.new(root, {
+          tooltipText: "{title}",
+          cursorOverStyle: "pointer"
+        });
+        var circle = container.children.push(am5.Circle.new(root, {
+          radius: 4,
+          fill: colorset.next(),
+          strokeOpacity: 0
+        }));
+        circle.animate({
+          key: "scale", from: 1, to: 5, duration: 600,
+          easing: am5.ease.out(am5.ease.cubic), loops: Infinity
+        });
+        circle.animate({
+          key: "opacity", from: 1, to: 0.1, duration: 600,
+          easing: am5.ease.out(am5.ease.cubic), loops: Infinity
+        });
+        return am5.Bullet.new(root, { sprite: container });
+      });
+      var cities = [
+        { title: "Brussels", latitude: 50.8371, longitude: 4.3676 },
+        { title: "Paris", latitude: 48.8567, longitude: 2.351 },
+        { title: "Tokyo", latitude: 35.6785, longitude: 139.6823 }
+      ];
+      for (var i = 0; i < cities.length; i++) {
+        pointSeries.data.push({
+          geometry: { type: "Point", coordinates: [cities[i].longitude, cities[i].latitude] },
+          title: cities[i].title
+        });
+      }
+      chart.appear(1000, 100);
+    });
 
-
-// Create the map chart
-// https://www.amcharts.com/docs/v5/charts/map-chart/
-var chart = root.container.children.push(am5map.MapChart.new(root, {
-  panX: "rotateX",
-  panY: "rotateY",
-  projection: am5map.geoOrthographic(),
-  paddingBottom: 20,
-  paddingTop: 20,
-  paddingLeft: 20,
-  paddingRight: 20
-}));
-
-
-
-// Create main polygon series for countries
-// https://www.amcharts.com/docs/v5/charts/map-chart/map-polygon-series/
-var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
-  geoJSON: am5geodata_worldLow 
-}));
-
-polygonSeries.mapPolygons.template.setAll({
-  tooltipText: "{name}",
-  toggleKey: "active",
-  interactive: true
-});
-
-polygonSeries.mapPolygons.template.states.create("hover", {
-  fill: root.interfaceColors.get("primaryButtonHover")
-});
-
-polygonSeries.mapPolygons.template.states.create("active", {
-  fill: root.interfaceColors.get("primaryButtonHover")
-});
-
-
-// Create series for background fill
-// https://www.amcharts.com/docs/v5/charts/map-chart/map-polygon-series/#Background_polygon
-var backgroundSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {}));
-backgroundSeries.mapPolygons.template.setAll({
-  fill: root.interfaceColors.get("alternativeBackground"),
-  fillOpacity: 0.1,
-  strokeOpacity: 0
-});
-backgroundSeries.data.push({
-  geometry: am5map.getGeoRectangle(90, 180, -90, -180)
-});
-
-var graticuleSeries = chart.series.unshift(
-  am5map.GraticuleSeries.new(root, {
-    step: 10
-  })
-);
-
-graticuleSeries.mapLines.template.set("strokeOpacity", 0.1)
-
-// Set up events
-var previousPolygon;
-
-polygonSeries.mapPolygons.template.on("active", function(active, target) {
-  if (previousPolygon && previousPolygon != target) {
-    previousPolygon.set("active", false);
-  }
-  if (target.get("active")) {
-    selectCountry(target.dataItem.get("id"));
-  }
-  previousPolygon = target;
-});
-
-function selectCountry(id) {
-  var dataItem = polygonSeries.getDataItemById(id);
-  var target = dataItem.get("mapPolygon");
-  if (target) {
-    var centroid = target.geoCentroid();
-    if (centroid) {
-      chart.animate({ key: "rotationX", to: -centroid.longitude, duration: 1500, easing: am5.ease.inOut(am5.ease.cubic) });
-      chart.animate({ key: "rotationY", to: -centroid.latitude, duration: 1500, easing: am5.ease.inOut(am5.ease.cubic) });
-    }
-  }
-}
-
-// Uncomment this to pre-center the globe on a country when it loads
-//polygonSeries.events.on("datavalidated", function() {
-//  selectCountry("AU");
-//});
-
-
-// Make stuff animate on load
-chart.appear(1000, 100);
-
-}); // end am5.ready()
+    // ======== الخريطة الخامسة (Globe rotating) ========
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv4");
+      root.setThemes([ am5themes_Animated.new(root) ]);
+      var chart = root.container.children.push(am5map.MapChart.new(root, {
+        panX: "rotateX",
+        panY: "rotateY",
+        projection: am5map.geoOrthographic()
+      }));
+      var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
+        geoJSON: am5geodata_worldLow
+      }));
+      var graticuleSeries = chart.series.push(am5map.GraticuleSeries.new(root, {}));
+      graticuleSeries.mapLines.template.setAll({
+        strokeOpacity: 0.1,
+        stroke: root.interfaceColors.get("alternativeBackground")
+      });
+      chart.animate({ key: "rotationX", from: 0, to: 360, duration: 30000, loops: Infinity });
+      chart.appear(1000, 100);
+    });
   </script>
 </body>
-
 </html>
